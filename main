@@ -1,0 +1,260 @@
+-- LocalScript to create a smooth rainbow button UI with a draggable bar connected to the button
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Create the UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 200) -- Adjusted height to fit all buttons
+frame.Position = UDim2.new(0.5, -100, 0, 10) -- Position at the top of the screen
+frame.BackgroundTransparency = 1 -- Make frame invisible
+frame.Parent = screenGui
+
+-- Create a draggable bar at the top (same width as the button)
+local dragBar = Instance.new("Frame")
+dragBar.Size = UDim2.new(0, 180, 0, 25) -- Make the drag bar same width as the button
+dragBar.Position = UDim2.new(0, 10, 0, 25) -- Position the drag bar right above the rainbow button
+dragBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Solid black color
+dragBar.Parent = frame
+
+-- Add text to the drag bar
+local dragBarLabel = Instance.new("TextLabel")
+dragBarLabel.Size = UDim2.new(1, 0, 1, 0) -- Fill the drag bar
+dragBarLabel.BackgroundTransparency = 1 -- Make the background transparent
+dragBarLabel.Text = "Leo's Random TP V1"
+dragBarLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+dragBarLabel.TextSize = 14 -- Set text size
+dragBarLabel.Font = Enum.Font.SourceSans -- Normal font
+dragBarLabel.Parent = dragBar
+
+-- Create a small white button for credits
+local creditsButton = Instance.new("TextButton")
+creditsButton.Size = UDim2.new(0, 25, 0, 25) -- Small square button
+creditsButton.Position = UDim2.new(1, -30, 0, 0) -- Position on the top-right of the drag bar
+creditsButton.Text = "?"
+creditsButton.TextColor3 = Color3.fromRGB(255, 255, 255) 
+creditsButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) 
+creditsButton.BorderSizePixel = 0 -- Remove gray border
+creditsButton.Parent = dragBar
+
+-- Create a menu for credits
+local creditsMenu = Instance.new("Frame")
+creditsMenu.Size = UDim2.new(0, 300, 0, 100)
+creditsMenu.Position = UDim2.new(0.5, -75, 0.5, -25) -- Center of the screen
+creditsMenu.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+creditsMenu.Visible = false -- Initially hidden
+creditsMenu.Parent = screenGui
+
+local creditsLabel = Instance.new("TextLabel")
+creditsLabel.Size = UDim2.new(1, 0, 1, 0)
+creditsLabel.BackgroundTransparency = 1
+creditsLabel.Text = "Made by Leonard D and Shai R"
+creditsLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+creditsLabel.TextScaled = true
+creditsLabel.Font = Enum.Font.SourceSans
+creditsLabel.Parent = creditsMenu
+
+creditsButton.MouseButton1Click:Connect(function()
+    creditsMenu.Visible = not creditsMenu.Visible -- Toggle visibility
+end)
+
+-- Create the teleport button
+local teleportButton = Instance.new("TextButton")
+teleportButton.Size = UDim2.new(0, 180, 0, 50)
+teleportButton.Position = UDim2.new(0, 10, 0, 50) -- Position the button directly below the drag bar
+teleportButton.Text = "Teleport to Random Player"
+teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+teleportButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Starting color (red)
+teleportButton.Parent = frame
+
+-- Create the "Random Spook" button
+local spookButton = Instance.new("TextButton")
+spookButton.Size = UDim2.new(0, 180, 0, 50)
+spookButton.Position = UDim2.new(0, 10, 0, 110) -- Position below the rainbow button
+spookButton.Text = "Random Spook"
+spookButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+spookButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Starting color (green)
+spookButton.Parent = frame
+
+-- Create the "Random Loop" button
+local loopButton = Instance.new("TextButton")
+loopButton.Size = UDim2.new(0, 180, 0, 50)
+loopButton.Position = UDim2.new(0, 10, 0, 170) -- Position below the "Random Spook" button
+loopButton.Text = "Random Loop"
+loopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+loopButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Starting color (blue)
+loopButton.Parent = frame
+
+-- Rainbow animation for buttons
+local TweenService = game:GetService("TweenService")
+
+local function animateRainbow(button)
+    local colors = {
+        Color3.fromRGB(255, 0, 0), -- Red
+        Color3.fromRGB(255, 165, 0), -- Orange
+        Color3.fromRGB(255, 255, 0), -- Yellow
+        Color3.fromRGB(0, 255, 0), -- Green
+        Color3.fromRGB(0, 0, 255), -- Blue
+        Color3.fromRGB(75, 0, 130), -- Indigo
+        Color3.fromRGB(238, 130, 238) -- Violet
+    }
+
+    coroutine.wrap(function()
+        while true do
+            for _, color in ipairs(colors) do
+                local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut) -- Faster transitions
+                local goal = {BackgroundColor3 = color}
+                local tween = TweenService:Create(button, tweenInfo, goal)
+                tween:Play()
+                tween.Completed:Wait()
+            end
+        end
+    end)()
+end
+
+-- Apply rainbow animation to buttons
+animateRainbow(teleportButton)
+animateRainbow(spookButton)
+animateRainbow(loopButton)
+
+-- Dragging functionality
+local dragging = false
+local dragStart = nil
+local startPos = nil
+local mouse = player:GetMouse()
+
+dragBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+dragBar.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(0, startPos.X.Offset + delta.X, 0, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+dragBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Teleport functions
+local function teleportToRandomPlayer()
+    local players = game.Players:GetPlayers()
+    local otherPlayers = {}
+    for _, p in ipairs(players) do
+        if p ~= player then
+            table.insert(otherPlayers, p)
+        end
+    end
+    if #otherPlayers > 0 then
+        local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+        local randomCharacter = randomPlayer.Character
+        if randomCharacter and randomCharacter:FindFirstChild("HumanoidRootPart") then
+            character:SetPrimaryPartCFrame(randomCharacter.HumanoidRootPart.CFrame)
+        end
+    else
+        print("No other players to teleport to.")
+    end
+end
+
+local function randomSpook()
+    local players = game.Players:GetPlayers()
+    local otherPlayers = {}
+    for _, p in ipairs(players) do
+        if p ~= player then
+            table.insert(otherPlayers, p)
+        end
+    end
+    local currentPosition = character.PrimaryPart.CFrame
+    if #otherPlayers > 0 then
+        local randomPlayer = otherPlayers[math.random(1, #otherPlayers)]
+        local randomCharacter = randomPlayer.Character
+        if randomCharacter and randomCharacter:FindFirstChild("HumanoidRootPart") then
+            character:SetPrimaryPartCFrame(randomCharacter.HumanoidRootPart.CFrame)
+            wait(0.5)
+            character:SetPrimaryPartCFrame(currentPosition)
+        end
+    else
+        print("No other players to teleport to.")
+    end
+end
+
+-- Random Loop teleport (same random player)
+local looping = false
+local selectedPlayer = nil -- Store the selected player for the loop
+
+local function randomLoop()
+    if looping then
+        looping = false
+        print("Stopped looping.")
+        return
+    end
+
+    -- Start looping
+    looping = true
+    local players = game.Players:GetPlayers()
+    local otherPlayers = {}
+    for _, p in ipairs(players) do
+        if p ~= player then
+            table.insert(otherPlayers, p)
+        end
+    end
+
+    if #otherPlayers > 0 then
+        selectedPlayer = otherPlayers[math.random(1, #otherPlayers)] -- Select a random player
+        print("Selected player:", selectedPlayer.Name)
+
+        coroutine.wrap(function()
+            while looping do
+                -- Check if the selected player's character exists
+                if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                    character:SetPrimaryPartCFrame(selectedPlayer.Character.HumanoidRootPart.CFrame)
+                else
+                    print("Selected player is no longer valid.")
+                    looping = false
+                end
+                wait(1) -- Adjust loop speed
+            end
+        end)()
+    else
+        print("No other players to teleport to.")
+    end
+end
+
+teleportButton.MouseButton1Click:Connect(teleportToRandomPlayer)
+spookButton.MouseButton1Click:Connect(randomSpook)
+loopButton.MouseButton1Click:Connect(randomLoop)
+
+-- Create a small black button with white text on the left of the drag bar to hide/show all buttons
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 25, 0, 25) -- Small square button
+toggleButton.Position = UDim2.new(0, 0, 0, 0) -- Position on the top-left of the drag bar
+toggleButton.Text = "H" -- Label the button with "H" for "Hide"
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black background
+toggleButton.BorderSizePixel = 0 -- Remove gray border
+toggleButton.Parent = dragBar
+
+-- Variable to track the visibility state
+local buttonsVisible = true
+
+-- Function to toggle visibility of all buttons
+local function toggleButtons()
+    buttonsVisible = not buttonsVisible -- Toggle state
+    teleportButton.Visible = buttonsVisible
+    spookButton.Visible = buttonsVisible
+    loopButton.Visible = buttonsVisible
+end
+
+-- Connect the toggle function to the button
+toggleButton.MouseButton1Click:Connect(toggleButtons)
